@@ -587,4 +587,71 @@ else:
 # --- Очистка сессии при необходимости ---
 if st.sidebar.button("🗑️ Очистить результат", use_container_width=True):
     st.session_state.generated_text = ""
+    st.markdown(
+    """
+    <style>
+    /* === 1. ОТОБРАЖЕНИЕ НА ЭКРАНЕ КОМПЬЮТЕРА === */
+    .vzaimo-card { 
+        border: 1px solid #dee2e6; 
+        padding: 30px; 
+        border-radius: 8px; 
+        margin-bottom: 30px; 
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .spec-block {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-left: 4px solid #4dabf7;
+        font-size: 11pt;
+        margin-bottom: 20px;
+        border-radius: 0 4px 4px 0;
+    }
+    .tasks-list {
+        padding-left: 20px;
+        margin-top: 15px;
+        margin-bottom: 25px;
+    }
+    .tasks-list li {
+        margin-bottom: 20px !important;
+        font-size: 12pt;
+        line-height: 1.6;
+        display: list-item !important;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
+    th, td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; font-size: 11pt; }
+    th { background-color: #f1f3f5; font-weight: 600; }
+
+    /* === 2. СТРОГИЕ ПРАВИЛА ДЛЯ ПЕЧАТИ (Ctrl + P) === */
+    @media print {
+        header, [data-testid="stSidebar"], .stButton, footer, iframe, .stAlert {
+            display: none !important;
+        }
+        .main .block-container {
+            padding: 0px !important;
+            margin: 0px !important;
+            max-width: 100% !important;
+        }
+        .vzaimo-card { 
+            border: 1.5px solid #000000 !important; 
+            box-shadow: none !important; 
+            background: #ffffff !important;
+            padding: 20px !important;
+            margin-bottom: 30px !important; 
+            page-break-inside: avoid !important;
+        }
+        .spec-block {
+            border-left: 4px solid #000000 !important;
+            background-color: #ffffff !important;
+        }
+        th {
+            background-color: #eaeded !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
     st.rerun()
