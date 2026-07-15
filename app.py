@@ -1198,6 +1198,7 @@ if st.sidebar.button("🚀 Сгенерировать бланки задани�
         with st.spinner("ИИ анализирует КТП и составляет академические варианты... Пожалуйста, подождите."):
             try:
                 result = generate_perfect_math(
+                    selected_class,
                     selected_subject,
                     selected_section,
                     selected_objectives,
@@ -1211,6 +1212,186 @@ if st.sidebar.button("🚀 Сгенерировать бланки задани�
             except Exception as e:
                 st.error(f"Произошла ошибка при связи с ИИ-модулем: {e}")
 
+# =====================================================================
+# РАЗДЕЛ 5. ВЫВОД НА ЭКРАН И СТИЛИЗАЦИЯ (ЯРКИЙ ШКОЛЬНЫЙ СТИЛЬ + ПЕЧАТЬ А4)
+# =====================================================================
+st.markdown(
+    """
+    <style>
+    /* === 1. ЭКРАННЫЙ СТИЛЬ (ЯРКИЙ ШКОЛЬНЫЙ ДИЗАЙН) === */
+    
+    /* Главный контейнер карточки варианта (Синий школьный акцент) */
+    .vzaimo-card { 
+        border: 2px solid #3b82f6; 
+        padding: 30px; 
+        border-radius: 12px; 
+        margin-bottom: 35px; 
+        background-color: #ffffff;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        position: relative;
+    }
+    
+    /* Крупные школьные заголовки */
+    .vzaimo-card h2 {
+        color: #1e3a8a;
+        font-size: 22pt;
+        font-weight: 700;
+        margin-bottom: 5px;
+        border-bottom: 2px solid #3b82f6;
+        padding-bottom: 10px;
+    }
+    
+    .vzaimo-card h3 {
+        color: #2563eb;
+        font-size: 16pt;
+        font-weight: 600;
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }
+
+    /* Блок спецификации и целей обучения (Зеленый цвет + Лампочка) */
+    .spec-block {
+        background-color: #f0fdf4;
+        padding: 18px;
+        border-left: 6px solid #10b981;
+        font-size: 11pt;
+        margin-bottom: 25px;
+        border-radius: 0 8px 8px 0;
+        color: #14532d;
+    }
+    
+    /* Иконка к заголовку */
+    .spec-block::before {
+        content: "💡 ";
+        font-size: 13pt;
+    }
+    
+    /* Школьный список задач (Карандаш) */
+    .tasks-list {
+        padding-left: 25px;
+        margin-top: 15px;
+        margin-bottom: 25px;
+        list-style-type: none;
+        counter-reset: task-counter;
+    }
+    .tasks-list li {
+        position: relative;
+        margin-bottom: 22px !important;
+        font-size: 13pt;
+        line-height: 1.6;
+        color: #1f2937;
+        padding-left: 35px;
+    }
+    .tasks-list li::before {
+        counter-increment: task-counter;
+        content: counter(task-counter) " ✏️";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #3b82f6;
+        font-weight: 700;
+        font-size: 12pt;
+    }
+    
+    /* Таблица критериев */
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 20px; 
+        margin-bottom: 25px; 
+        background-color: #ffffff;
+    }
+    th, td { 
+        border: 1px solid #cbd5e1; 
+        padding: 12px 14px; 
+        text-align: left; 
+        font-size: 11pt; 
+    }
+    th { 
+        background-color: #eff6ff; 
+        color: #1e40af;
+        font-weight: 600; 
+    }
+    
+    /* Блок ответов и ключей для учителя */
+    .answers-block {
+        background-color: #fff7ed;
+        padding: 18px;
+        border-left: 6px solid #f97316;
+        border-radius: 0 8px 8px 0;
+        color: #7c2d12;
+        margin-top: 20px;
+    }
+    .answers-block-title::before {
+        content: "📚 ";
+    }
+
+    /* === 2. СТРОГИЕ ПРАВИЛА ДЛЯ ПЕЧАТИ (А4, Ctrl + P) === */
+    @media print {
+        header, [data-testid="stSidebar"], .stButton, footer, iframe, .stAlert, .stSpinner {
+            display: none !important;
+        }
+        .main .block-container {
+            padding: 0px !important;
+            margin: 0px !important;
+            max-width: 100% !important;
+        }
+        
+        .vzaimo-card { 
+            border: none !important; 
+            box-shadow: none !important; 
+            background: #ffffff !important;
+            padding: 0px !important;
+            margin-bottom: 0px !important; 
+            page-break-after: always !important;
+        }
+        
+        .spec-block {
+            border-left: 3px solid #000000 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            padding: 10px 0px !important;
+        }
+        .answers-block {
+            border-left: 3px solid #000000 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            padding: 10px 0px !important;
+            page-break-inside: avoid !important;
+        }
+        
+        .vzaimo-card h2, .vzaimo-card h3 {
+            color: #000000 !important;
+            border-bottom: 1px solid #000000 !important;
+        }
+        
+        th {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        th, td {
+            border: 1px solid #000000 !important;
+        }
+        
+        .tasks-list li::before {
+            content: counter(task-counter) ". ";
+            color: #000000 !important;
+        }
+        .spec-block::before, .answers-block-title::before {
+            content: "" !important;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Отображение результата работы
+if "generated_text" in st.session_state and st.session_state.generated_text:
+    st.markdown(st.session_state.generated_text, unsafe_allow_html=True)
+    st.info("💡 Дизайн обновлен! Нажмите **Ctrl + P**, чтобы отправить академические карточки на печать А4 или сохранить в PDF.")
 # =====================================================================
 # РАЗДЕЛ 5. ВЫВОД НА ЭКРАН И СТИЛИЗАЦИЯ (ЯРКИЙ ШКОЛЬНЫЙ СТИЛЬ + ПЕЧАТЬ А4)
 # =====================================================================
