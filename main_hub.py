@@ -1,8 +1,17 @@
 # main_hub.py
 import streamlit as st
+import importlib
+import sys
+import os
+
+# Добавляем текущую папку в путь для импорта
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from style_utils import apply_custom_styles, render_sidebar_logo, render_info_cards, render_footer
 
-# Настройка страницы
+# =====================================================================
+# НАСТРОЙКА СТРАНИЦЫ
+# =====================================================================
 st.set_page_config(
     page_title="📚 ИИ-Генератор СОР/СОЧ по математике",
     page_icon="📚",
@@ -14,10 +23,14 @@ st.set_page_config(
 if "generated_text" not in st.session_state:
     st.session_state.generated_text = ""
 
-# Применение стилей
+# =====================================================================
+# ПРИМЕНЕНИЕ СТИЛЕЙ
+# =====================================================================
 apply_custom_styles()
 
-# Подключение MathJax
+# =====================================================================
+# ПОДКЛЮЧЕНИЕ MATHJAX
+# =====================================================================
 st.markdown("""
 <script>
 window.MathJax = {
@@ -35,7 +48,9 @@ window.MathJax = {
 </script>
 """, unsafe_allow_html=True)
 
-# Боковая панель
+# =====================================================================
+# БОКОВАЯ ПАНЕЛЬ
+# =====================================================================
 render_sidebar_logo()
 
 # Список классов
@@ -57,7 +72,10 @@ selected_class = st.sidebar.selectbox("Класс:", list(CLASSES.keys()), index
 st.sidebar.markdown("---")
 st.sidebar.info(f"💡 Выбран класс: **{selected_class}**")
 
-# Основная область
+# =====================================================================
+# ОСНОВНАЯ ОБЛАСТЬ
+# =====================================================================
+
 # Заголовок
 st.markdown("""
 <div style="text-align: center; padding: 20px 0 10px 0;">
@@ -71,12 +89,19 @@ render_info_cards()
 
 st.markdown("---")
 
-# Загрузка модуля для выбранного класса
+# =====================================================================
+# ЗАГРУЗКА МОДУЛЯ ДЛЯ ВЫБРАННОГО КЛАССА
+# =====================================================================
 module_name = CLASSES[selected_class]
 
 try:
-    # Импортируем модуль
-    module = __import__(module_name)
+    # Пытаемся импортировать модуль
+    # Сначала пробуем через importlib
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        # Если не получилось, пробуем через __import__
+        module = __import__(module_name)
     
     # Проверяем наличие функции render
     if hasattr(module, 'render'):
@@ -93,12 +118,30 @@ try:
             <p style="color: #94a3b8; font-size: 1.1rem;">
                 Для класса <b>{selected_class}</b> модуль будет доступен в ближайшее время
             </p>
+            <p style="color: #94a3b8; font-size: 0.9rem;">
+                Файл: <code>{module_name}.py</code>
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
 except ImportError as e:
     st.error(f"❌ Ошибка загрузки модуля: {e}")
-    st.info(f"💡 Создайте файл {module_name}.py с функцией render()")
+    st.info(f"💡 Создайте файл `{module_name}.py` с функцией `render()`")
+    
+    # Показываем пример кода
+    with st.expander("📖 Как создать модуль для класса"):
+        st.code(f"""
+# {module_name}.py
+import streamlit as st
 
-# Футер
+def render():
+    st.markdown("## 📚 {selected_class}")
+    st.info("🚧 Модуль для {selected_class} в разработке")
+    
+    # Добавьте здесь логику генерации заданий
+""", language="python")
+
+# =====================================================================
+# ФУТЕР
+# =====================================================================
 render_footer()
