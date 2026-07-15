@@ -82,30 +82,80 @@ ktp_database = {
 }
 
 # =====================================================================
-# РАЗДЕЛ 2. ИНТЕРФЕЙС НАСТРОЕК В БОКОВОЙ ПАНЕЛИ
+# РАЗДЕЛ 2. ИНТЕРФЕЙС НАСТРОЕК В БОКОВОЙ ПАНЕЛИ (С УЧЕТОМ ЕМН И ОГН)
 # =====================================================================
-st.sidebar.header("📋 Настройки КТП и ГОСО РК")
+st.sidebar.markdown("### 📋 Шаг 1. Выберите учебный план")
 
-# Динамический выбор курса
-selected_class = st.sidebar.selectbox("Выберите класс и направление:", list(ktp_database.keys()))
-selected_subject = st.sidebar.selectbox("Выберите предмет:", list(ktp_database[selected_class].keys()))
-selected_section = st.sidebar.selectbox("Выберите четверть и раздел КТП:", list(ktp_database[selected_class][selected_subject].keys()))
+# 1. Расширенный выбор классов с разделением на ЕМН и ОГН
+class_options = [
+    "5 класс", 
+    "6 класс", 
+    "7 класс", 
+    "8 класс", 
+    "9 класс", 
+    "10 класс (ЕМН)", 
+    "10 класс (ОГН)", 
+    "11 класс (ЕМН)", 
+    "11 класс (ОГН)"
+]
+selected_class = st.sidebar.selectbox("1. Выберите класс и направление:", class_options)
 
-# Множественный выбор целей обучения
-objectives = ktp_database[selected_class][selected_subject][selected_section]
+# 2. Динамическое определение предметов
+if selected_class in ["5 класс", "6 класс"]:
+    subject_options = ["Математика"]
+elif "ЕМН" in selected_class or "ОГН" in selected_class or "10 класс" in selected_class:
+    subject_options = ["Алгебра и начала анализа", "Геометрия"]
+else:  # 7, 8, 9 классы
+    subject_options = ["Алгебра", "Геометрия"]
+
+selected_subject = st.sidebar.selectbox("2. Выберите предмет:", subject_options)
+
+# Безопасное получение списка разделов/четвертей из базы данных
+available_sections = []
+if selected_class in ktp_database and selected_subject in ktp_database[selected_class]:
+    available_sections = list(ktp_database[selected_class][selected_subject].keys())
+
+if not available_sections:
+    available_sections = ["Раздел в разработке (базовая КТП)"]
+
+selected_section = st.sidebar.selectbox("3. Выберите четверть / раздел КТП:", available_sections)
+
+# 3. Динамический множественный выбор целей обучения (ЦО)
+available_objectives = []
+if (selected_class in ktp_database and 
+    selected_subject in ktp_database[selected_class] and 
+    selected_section in ktp_database[selected_class][selected_subject]):
+    available_objectives = ktp_database[selected_class][selected_subject][selected_section]
+
 selected_objectives = st.sidebar.multiselect(
-    "Выберите цели обучения (ЦО):",
-    objectives,
-    placeholder="Выберите одну или несколько ЦО"
+    "4. Выберите цели обучения (ЦО):",
+    available_objectives,
+    placeholder="Кликните для выбора одной или нескольких ЦО"
 )
 
+# --- Блок параметров самой контрольной работы ---
 st.sidebar.markdown("---")
-st.sidebar.header("⚙️ Параметры генерации")
+st.sidebar.markdown("### ⚙️ Шаг 2. Параметры оценивания")
 
-work_type = st.sidebar.selectbox("Тип оценивания:", ["Формативное оценивание (ФО)", "СОР", "СОЧ"])
+work_type = st.sidebar.selectbox(
+    "Тип работы:", 
+    ["Формативное оценивание (ФО)", "СОР", "СОЧ"]
+)
+
+# Динамически меняем параметры по умолчанию в зависимости от типа работы
+if work_type == "Формативное оценивание (ФО)":
+    default_tasks = 2
+    default_score = 5
+elif work_type == "СОР":
+    default_tasks = 4
+    default_score = 10
+else:  # СОЧ
+    default_tasks = 6
+    default_score = 20
+
 variants = st.sidebar.slider("Количество вариантов:", min_value=1, max_value=4, value=2)
-task_count = st.sidebar.slider("Количество заданий в варианте:", min_value=1, max_value=10, value=4)
-max_score = st.sidebar.number_input("Максимальный балл за работу:", min_value=1, max_value=40, value=10)
+task_count = st.sidebar.slider("Количество заданий в одном варианте:", min_value=1, max_value=10, value=default_tasks)
+max_score = st.sidebar.number_input("Максимальный балл за всю работу:", min_value=1, max_value=40, value=default_score)
 
 # =====================================================================
 # РАЗДЕЛ 3. ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ИИ (ПРОМПТ)
