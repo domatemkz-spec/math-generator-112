@@ -1,5 +1,5 @@
 import streamlit as st
-from g4f.client import Client
+from g4f.local import Client
 import io
 
 # Настройка страницы
