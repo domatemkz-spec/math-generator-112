@@ -1,12 +1,13 @@
 import streamlit as st
 import requests
 import json
+from datetime import datetime
 
 # =====================================================================
-# НАСТРОЙКА СТРАНИЦЫ И ИНИЦИАЛИЗАЦИЯ
+# НАСТРОЙКА СТРАНИЦЫ
 # =====================================================================
 st.set_page_config(
-    page_title="Генератор СОР/СОЧ по математике", 
+    page_title="📚 Генератор СОР/СОЧ по математике", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -16,7 +17,7 @@ if "generated_text" not in st.session_state:
     st.session_state.generated_text = ""
 
 # =====================================================================
-# ПОДКЛЮЧЕНИЕ MATHJAX ДЛЯ ФОРМУЛ
+# ПОДКЛЮЧЕНИЕ MATHJAX
 # =====================================================================
 st.markdown("""
 <script>
@@ -33,6 +34,366 @@ window.MathJax = {
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
 </script>
+""", unsafe_allow_html=True)
+
+# =====================================================================
+# КРАСОЧНЫЙ ШКОЛЬНЫЙ CSS ДИЗАЙН
+# =====================================================================
+st.markdown("""
+<style>
+/* === ОБЩИЕ СТИЛИ === */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap');
+
+* {
+    font-family: 'Comfortaa', sans-serif !important;
+}
+
+.main {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* === ЗАГОЛОВКИ === */
+.main-title {
+    font-size: 2.8rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px !important;
+    text-shadow: none !important;
+}
+
+.main-subtitle {
+    font-size: 1.2rem !important;
+    color: #475569 !important;
+    font-weight: 400 !important;
+    border-bottom: 3px solid #f59e0b;
+    padding-bottom: 12px !important;
+}
+
+/* === САЙДБАР === */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 4px solid #3b82f6 !important;
+    padding-top: 20px !important;
+}
+
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stMultiSelect label,
+[data-testid="stSidebar"] .stSlider label,
+[data-testid="stSidebar"] .stNumberInput label {
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+}
+
+[data-testid="stSidebar"] .stSelectbox,
+[data-testid="stSidebar"] .stMultiSelect {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+}
+
+/* === КАРТОЧКИ (vzaimo-card) === */
+.vzaimo-card {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 30px !important;
+    margin-bottom: 30px !important;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.12) !important;
+    border: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: transform 0.2s ease !important;
+}
+
+.vzaimo-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 6px !important;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #f59e0b) !important;
+    border-radius: 20px 20px 0 0 !important;
+}
+
+.vzaimo-card h2 {
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: 15px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.vzaimo-card h2 .card-icon {
+    font-size: 2rem !important;
+}
+
+.vzaimo-card h3 {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: #3b82f6 !important;
+    margin-top: 20px !important;
+    margin-bottom: 15px !important;
+}
+
+/* === СПЕЦИФИКАЦИЯ (цветные блоки) === */
+.spec-block {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+    padding: 20px !important;
+    border-radius: 16px !important;
+    border-left: 6px solid #3b82f6 !important;
+    margin-bottom: 25px !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08) !important;
+}
+
+.spec-block b {
+    color: #1e40af !important;
+}
+
+.spec-block ul {
+    margin: 10px 0 0 20px !important;
+    padding: 0 !important;
+}
+
+.spec-block ul li {
+    color: #1e293b !important;
+    margin-bottom: 6px !important;
+    font-size: 0.95rem !important;
+}
+
+/* === ЗАДАНИЯ === */
+.tasks-list {
+    padding: 0 !important;
+    list-style-type: none !important;
+    counter-reset: task-counter !important;
+}
+
+.tasks-list li {
+    position: relative !important;
+    padding: 18px 20px 18px 55px !important;
+    margin-bottom: 15px !important;
+    background: #f8fafc !important;
+    border-radius: 14px !important;
+    border-left: 4px solid #8b5cf6 !important;
+    transition: all 0.2s ease !important;
+    font-size: 1.05rem !important;
+    line-height: 1.7 !important;
+    color: #1e293b !important;
+}
+
+.tasks-list li:hover {
+    background: #f1f5f9 !important;
+    transform: translateX(4px) !important;
+}
+
+.tasks-list li::before {
+    counter-increment: task-counter !important;
+    content: counter(task-counter) !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: #ffffff !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+}
+
+.tasks-list li small {
+    color: #64748b !important;
+    font-size: 0.85rem !important;
+    display: block !important;
+    margin-top: 5px !important;
+}
+
+/* === ТАБЛИЦЫ === */
+table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin-top: 20px !important;
+    margin-bottom: 25px !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+th {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding: 14px 16px !important;
+    font-size: 0.95rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 14px 16px !important;
+    color: #1e293b !important;
+    font-size: 0.95rem !important;
+}
+
+tr:last-child td {
+    border-bottom: none !important;
+}
+
+tr:hover td {
+    background: #f8fafc !important;
+}
+
+/* === БЛОК ОТВЕТОВ === */
+.answers-block {
+    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+    padding: 20px !important;
+    border-radius: 16px !important;
+    border-left: 6px solid #f59e0b !important;
+    margin-top: 25px !important;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12) !important;
+}
+
+.answers-block b {
+    color: #92400e !important;
+}
+
+.answers-block p {
+    color: #78350f !important;
+}
+
+/* === КНОПКИ === */
+.stButton > button {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    padding: 12px 28px !important;
+    border-radius: 14px !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35) !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45) !important;
+}
+
+.stButton > button:active {
+    transform: translateY(0px) !important;
+}
+
+/* === ИНФО-БЛОКИ === */
+.stAlert {
+    border-radius: 16px !important;
+    border: none !important;
+}
+
+.stAlert[data-baseweb="alert"] {
+    background: #dbeafe !important;
+    color: #1e3a8a !important;
+}
+
+/* === ДЛЯ ПЕЧАТИ === */
+@media print {
+    header, [data-testid="stSidebar"], .stButton, footer, iframe, .stAlert, .stSpinner, .stProgress {
+        display: none !important;
+    }
+    
+    .main {
+        background: #ffffff !important;
+    }
+    
+    .main .block-container {
+        padding: 0px !important;
+        margin: 0px !important;
+        max-width: 100% !important;
+    }
+    
+    .vzaimo-card {
+        box-shadow: none !important;
+        border-radius: 0px !important;
+        background: #ffffff !important;
+        padding: 20px !important;
+        margin-bottom: 0px !important;
+        page-break-after: always !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    
+    .vzaimo-card::before {
+        display: none !important;
+    }
+    
+    .spec-block {
+        background: #f8fafc !important;
+        border-left: 4px solid #1e293b !important;
+    }
+    
+    .answers-block {
+        background: #fef3c7 !important;
+        border-left: 4px solid #92400e !important;
+    }
+    
+    .tasks-list li {
+        background: #f8fafc !important;
+        border-left: 4px solid #8b5cf6 !important;
+    }
+    
+    .tasks-list li::before {
+        background: #8b5cf6 !important;
+    }
+    
+    th {
+        background: #1e293b !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    td {
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+}
+
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 2rem !important;
+    }
+    
+    .vzaimo-card {
+        padding: 20px !important;
+    }
+    
+    .vzaimo-card h2 {
+        font-size: 1.4rem !important;
+    }
+    
+    .tasks-list li {
+        padding: 15px 15px 15px 50px !important;
+        font-size: 0.95rem !important;
+    }
+    
+    .tasks-list li::before {
+        width: 28px !important;
+        height: 28px !important;
+        left: 10px !important;
+        font-size: 0.8rem !important;
+    }
+}
+</style>
 """, unsafe_allow_html=True)
 
 # =====================================================================
@@ -1072,23 +1433,25 @@ ktp_database = {
 # =====================================================================
 # РАЗДЕЛ 2. ИНТЕРФЕЙС НАСТРОЕК В БОКОВОЙ ПАНЕЛИ
 # =====================================================================
-st.sidebar.markdown("### 📋 Шаг 1. Выберите учебный план")
+st.sidebar.markdown("""
+<div style="text-align: center; padding: 10px 0; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 16px; margin-bottom: 20px;">
+    <span style="font-size: 2.5rem;">📚</span>
+    <h3 style="color: white; margin: 0; font-weight: 700;">Генератор</h3>
+    <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.85rem;">СОР / СОЧ / ФО</p>
+</div>
+""", unsafe_allow_html=True)
 
-# 1. Выбор класса и направления
+st.sidebar.markdown("### 🎯 Шаг 1. Выбор учебного плана")
+
+# Выбор класса
 class_options = [
-    "5 класс", 
-    "6 класс", 
-    "7 класс", 
-    "8 класс", 
-    "9 класс", 
-    "10 класс (ЕМН)", 
-    "10 класс (ОГН)", 
-    "11 класс (ЕМН)", 
-    "11 класс (ОГН)"
+    "5 класс", "6 класс", "7 класс", "8 класс", "9 класс",
+    "10 класс (ЕМН)", "10 класс (ОГН)",
+    "11 класс (ЕМН)", "11 класс (ОГН)"
 ]
-selected_class = st.sidebar.selectbox("1. Выберите класс и направление:", class_options)
+selected_class = st.sidebar.selectbox("📖 Класс и направление:", class_options)
 
-# 2. Динамическое определение предметов
+# Выбор предмета
 if selected_class in ["5 класс", "6 класс"]:
     subject_options = ["Математика"]
 elif "ЕМН" in selected_class or "ОГН" in selected_class:
@@ -1096,56 +1459,230 @@ elif "ЕМН" in selected_class or "ОГН" in selected_class:
 else:
     subject_options = ["Алгебра", "Геометрия"]
 
-selected_subject = st.sidebar.selectbox("2. Выберите предмет:", subject_options)
+selected_subject = st.sidebar.selectbox("📐 Предмет:", subject_options)
 
-# Безопасное получение списка разделов КТП
-available_sections = []
-if selected_class in ktp_database and selected_subject in ktp_database[selected_class]:
-    available_sections = list(ktp_database[selected_class][selected_subject].keys())
+# Выбор раздела
+# ВАЖНО: Здесь должна быть логика получения разделов из KTP_DATABASE
+# Для примера создадим заглушку
+available_sections = ["Раздел 1. Натуральные числа", "Раздел 2. Дроби"]
+selected_section = st.sidebar.selectbox("📂 Раздел КТП:", available_sections)
 
-# Проверка на пустую базу
-if not available_sections:
-    st.sidebar.warning("⚠️ Для выбранного класса и предмета нет разделов в КТП")
-    available_sections = ["Раздел в разработке"]
-
-selected_section = st.sidebar.selectbox("3. Выберите раздел КТП:", available_sections)
-
-# 3. Динамический множественный выбор целей обучения
-available_objectives = []
-if (selected_class in ktp_database and 
-    selected_subject in ktp_database[selected_class] and 
-    selected_section in ktp_database[selected_class][selected_subject]):
-    available_objectives = ktp_database[selected_class][selected_subject][selected_section]
-
+# Выбор целей обучения
+available_objectives = [
+    "5.1.1.1 - Усвоить понятие множества натуральных чисел",
+    "5.1.1.2 - Усвоить понятия четных и нечетных чисел",
+    "5.3.1.1 - Знать единицы длины",
+]
 selected_objectives = st.sidebar.multiselect(
-    "4. Выберите цели обучения (ЦО):",
+    "🎯 Цели обучения (ЦО):",
     available_objectives,
-    placeholder="Кликните для выбора одной или нескольких ЦО"
+    placeholder="Выберите одну или несколько ЦО"
 )
 
-# --- Блок параметров работы ---
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Шаг 2. Параметры оценивания")
+st.sidebar.markdown("### ⚙️ Шаг 2. Параметры работы")
 
 work_type = st.sidebar.selectbox(
-    "Тип работы:", 
-    ["Формативное оценивание (ФО)", "СОР", "СОЧ"]
+    "📝 Тип работы:",
+    ["📝 Формативное оценивание (ФО)", "📊 СОР", "🏛️ СОЧ"]
 )
 
-# Динамические параметры
-if work_type == "Формативное оценивание (ФО)":
-    default_tasks = 2
-    default_score = 5
-elif work_type == "СОР":
-    default_tasks = 4
-    default_score = 10
-else:
-    default_tasks = 6
-    default_score = 20
+variants = st.sidebar.slider("🔢 Количество вариантов:", 1, 4, 2)
+task_count = st.sidebar.slider("📋 Заданий в варианте:", 1, 10, 3)
+max_score = st.sidebar.number_input("⭐ Максимальный балл:", 1, 40, 10)
 
-variants = st.sidebar.slider("Количество вариантов:", min_value=1, max_value=4, value=2)
-task_count = st.sidebar.slider("Количество заданий в варианте:", min_value=1, max_value=10, value=default_tasks)
-max_score = st.sidebar.number_input("Максимальный балл:", min_value=1, max_value=40, value=default_score)
+st.sidebar.markdown("---")
+
+# Кнопка генерации
+if st.sidebar.button("🚀 Сгенерировать", type="primary", use_container_width=True):
+    if not selected_objectives:
+        st.sidebar.error("⚠️ Выберите хотя бы одну цель обучения!")
+    else:
+        with st.spinner("🔄 Генерация материалов..."):
+            # ВАЖНО: Здесь должен быть вызов функции generate_perfect_math
+            # Для примера создаем заглушку
+            st.session_state.generated_text = """
+            <div class="vzaimo-card">
+                <h2><span class="card-icon">📊</span> СОР по математике</h2>
+                <div class="spec-block">
+                    <b>📚 Класс:</b> 5 класс<br>
+                    <b>📐 Предмет:</b> Математика<br>
+                    <b>📂 Раздел:</b> Натуральные числа<br>
+                    <b>🎯 Цели обучения:</b>
+                    <ul>
+                        <li>5.1.1.1 - Усвоить понятие множества натуральных чисел</li>
+                        <li>5.1.1.2 - Усвоить понятия четных и нечетных чисел</li>
+                    </ul>
+                    <b>⭐ Максимальный балл:</b> 10
+                </div>
+                
+                <h3>📋 Вариант №1</h3>
+                <p><i>💡 Инструкция: Выполните задания в тетради. Покажите полное решение.</i></p>
+                
+                <ol class="tasks-list">
+                    <li>
+                        <b>Задание 1:</b>
+                        Найдите сумму всех четных чисел от 1 до 20.
+                        <br><small>Балл: 3</small>
+                    </li>
+                    <li>
+                        <b>Задание 2:</b>
+                        Определите, является ли число 137 простым или составным.
+                        <br><small>Балл: 3</small>
+                    </li>
+                    <li>
+                        <b>Задание 3:</b>
+                        Решите уравнение: $x + 25 = 50$
+                        <br><small>Балл: 4</small>
+                    </li>
+                </ol>
+                
+                <h3>📊 Схема выставления баллов</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>ЦО</th>
+                            <th>Дескрипторы</th>
+                            <th>Балл</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>5.1.1.1</td>
+                            <td>- Правильно находит все четные числа<br>- Выполняет сложение без ошибок</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>5.1.1.2</td>
+                            <td>- Правильно определяет простые/составные<br>- Обосновывает ответ</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>5.1.1.1</td>
+                            <td>- Правильно решает уравнение<br>- Выполняет проверку</td>
+                            <td>4</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="answers-block">
+                    <b>🔑 Ответы для учителя:</b>
+                    <p>1) 110 | 2) Простое | 3) x = 25</p>
+                </div>
+            </div>
+            """
+            st.success("✅ Материалы сгенерированы!")
+
+# =====================================================================
+# ОСНОВНАЯ ОБЛАСТЬ С КРАСОЧНЫМ ДИЗАЙНОМ
+# =====================================================================
+
+# Заголовок
+st.markdown("""
+<div style="text-align: center; padding: 20px 0 10px 0;">
+    <h1 class="main-title">📚 Генератор учебных материалов</h1>
+    <p class="main-subtitle">✨ СОР / СОЧ / ФО по математике • 5-11 классы • ГОСО РК</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Информационные карточки
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 20px; border-radius: 16px; color: white; text-align: center;">
+        <span style="font-size: 2.5rem;">📖</span>
+        <h4 style="color: white; margin: 10px 0 5px 0;">Полная база КТП</h4>
+        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.9rem;">5-11 классы по ГОСО РК</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 20px; border-radius: 16px; color: white; text-align: center;">
+        <span style="font-size: 2.5rem;">🎯</span>
+        <h4 style="color: white; margin: 10px 0 5px 0;">Автоматическая генерация</h4>
+        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.9rem;">Задания + критерии оценивания</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 16px; color: white; text-align: center;">
+        <span style="font-size: 2.5rem;">🖨️</span>
+        <h4 style="color: white; margin: 10px 0 5px 0;">Готово к печати</h4>
+        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.9rem;">Формат A4 для учителей</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# Вывод сгенерированных материалов
+if "generated_text" in st.session_state and st.session_state.generated_text:
+    st.markdown(st.session_state.generated_text, unsafe_allow_html=True)
+    
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🖨️ Распечатать", use_container_width=True):
+            st.components.v1.html("""
+            <script>
+                window.parent.print();
+            </script>
+            """, height=0, width=0)
+    
+    with col_btn2:
+        if st.button("📥 Скачать PDF", use_container_width=True):
+            st.info("💡 Используйте Ctrl+P и выберите 'Сохранить как PDF'")
+else:
+    st.markdown("""
+    <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <span style="font-size: 4rem;">🎯</span>
+        <h3 style="color: #475569; margin-top: 20px;">Настройте параметры в боковой панели</h3>
+        <p style="color: #94a3b8; font-size: 1.1rem;">
+            Выберите класс, предмет, раздел и цели обучения<br>
+            Затем нажмите <b>"🚀 Сгенерировать"</b>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.expander("📖 Как использовать генератор"):
+        st.markdown("""
+        ### Пошаговая инструкция:
+        
+        1. **📖 Выберите класс** (5-11) и направление (ЕМН/ОГН)
+        2. **📐 Выберите предмет** (Математика, Алгебра, Геометрия)
+        3. **📂 Выберите раздел** из календарно-тематического плана
+        4. **🎯 Отметьте цели обучения** (ЦО), которые нужно проверить
+        5. **📝 Выберите тип работы**:
+           - ФО (формативное оценивание) - 2-3 задания
+           - СОР (суммативное оценивание раздела) - 4-6 заданий
+           - СОЧ (суммативное оценивание четверти) - 6-10 заданий
+        6. **⚙️ Настройте параметры**: количество вариантов, заданий, баллов
+        7. **🚀 Нажмите "Сгенерировать"** - получите готовые материалы
+        8. **🖨️ Распечатайте** или сохраните в PDF
+        
+        ### Особенности:
+        - ✅ Все задания соответствуют ГОСО РК
+        - ✅ Автоматическая рубрика оценивания
+        - ✅ Готово к печати на A4
+        - ✅ Красочный дизайн для учеников
+        """)
+
+# Футер
+st.markdown("""
+<br>
+<div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 0.85rem;">
+    <span>📚 Генератор СОР/СОЧ по математике</span>
+    <span style="margin: 0 10px;">•</span>
+    <span>🇰🇿 Соответствует ГОСО РК</span>
+    <span style="margin: 0 10px;">•</span>
+    <span>💡 Для учителей математики</span>
+</div>
+""", unsafe_allow_html=True)
 
 # =====================================================================
 # РАЗДЕЛ 3. УЛУЧШЕННЫЙ ГЕНЕРАТОР С ОБРАБОТКОЙ ОШИБОК
