@@ -38,6 +38,15 @@ def apply_custom_styles():
         padding-top: 20px !important;
     }
     
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] .stMultiSelect label,
+    [data-testid="stSidebar"] .stSlider label,
+    [data-testid="stSidebar"] .stNumberInput label {
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+    }
+    
     .vzaimo-card {
         background: #ffffff !important;
         border-radius: 20px !important;
@@ -72,6 +81,8 @@ def apply_custom_styles():
         color: #3b82f6 !important;
         margin-top: 20px !important;
         margin-bottom: 15px !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding-bottom: 8px !important;
     }
     
     .spec-block {
@@ -90,6 +101,7 @@ def apply_custom_styles():
     .spec-block ul li {
         color: #1e293b !important;
         margin-bottom: 6px !important;
+        font-size: 0.95rem !important;
     }
     
     .tasks-list {
@@ -106,6 +118,8 @@ def apply_custom_styles():
         border-radius: 14px !important;
         border-left: 4px solid #8b5cf6 !important;
         transition: all 0.2s ease !important;
+        font-size: 1.05rem !important;
+        line-height: 1.6 !important;
     }
     
     .tasks-list li::before {
@@ -124,6 +138,7 @@ def apply_custom_styles():
         align-items: center !important;
         justify-content: center !important;
         font-weight: 700 !important;
+        font-size: 0.9rem !important;
     }
     
     .tasks-list li small {
@@ -142,6 +157,7 @@ def apply_custom_styles():
         background: #ffffff !important;
         border-radius: 16px !important;
         overflow: hidden !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
     }
     
     th {
@@ -150,12 +166,19 @@ def apply_custom_styles():
         font-weight: 700 !important;
         padding: 14px 16px !important;
         text-transform: uppercase !important;
+        font-size: 0.9rem !important;
+        text-align: left !important;
     }
     
     td {
         border-bottom: 1px solid #e2e8f0 !important;
         padding: 14px 16px !important;
         color: #1e293b !important;
+        text-align: left !important;
+    }
+    
+    tr:last-child td {
+        border-bottom: none !important;
     }
     
     tr:hover td {
@@ -168,6 +191,15 @@ def apply_custom_styles():
         border-radius: 16px !important;
         border-left: 6px solid #f59e0b !important;
         margin-top: 25px !important;
+    }
+    
+    .answers-block b {
+        color: #92400e !important;
+    }
+    
+    .answers-block p {
+        color: #78350f !important;
+        margin: 8px 0 0 0 !important;
     }
     
     .stButton > button {
@@ -188,8 +220,12 @@ def apply_custom_styles():
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45) !important;
     }
     
+    .stButton > button:active {
+        transform: translateY(0px) !important;
+    }
+    
     @media print {
-        header, [data-testid="stSidebar"], .stButton, footer, iframe {
+        header, [data-testid="stSidebar"], .stButton, footer, iframe, .stAlert, .stSpinner {
             display: none !important;
         }
         
@@ -197,16 +233,43 @@ def apply_custom_styles():
             background: #ffffff !important;
         }
         
+        .main .block-container {
+            padding: 0px !important;
+            margin: 0px !important;
+            max-width: 100% !important;
+        }
+        
         .vzaimo-card {
             box-shadow: none !important;
             border-radius: 0px !important;
             background: #ffffff !important;
             padding: 20px !important;
+            margin-bottom: 0px !important;
             page-break-after: always !important;
+            border: 1px solid #e2e8f0 !important;
         }
         
         .vzaimo-card::before {
             display: none !important;
+        }
+        
+        .spec-block {
+            background: #f8fafc !important;
+            border-left: 4px solid #1e293b !important;
+        }
+        
+        .answers-block {
+            background: #fef3c7 !important;
+            border-left: 4px solid #92400e !important;
+        }
+        
+        .tasks-list li {
+            background: #f8fafc !important;
+            border-left: 4px solid #8b5cf6 !important;
+        }
+        
+        .tasks-list li::before {
+            background: #8b5cf6 !important;
         }
         
         th {
@@ -214,6 +277,32 @@ def apply_custom_styles():
             color: #ffffff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 2rem !important;
+        }
+        
+        .vzaimo-card {
+            padding: 20px !important;
+        }
+        
+        .vzaimo-card h2 {
+            font-size: 1.4rem !important;
+        }
+        
+        .tasks-list li {
+            padding: 15px 15px 15px 50px !important;
+            font-size: 0.95rem !important;
+        }
+        
+        .tasks-list li::before {
+            width: 28px !important;
+            height: 28px !important;
+            left: 10px !important;
+            font-size: 0.8rem !important;
         }
     }
     </style>
