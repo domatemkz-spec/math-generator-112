@@ -1117,7 +1117,7 @@ max_score = st.sidebar.number_input("Максимальный балл за вс
 # =====================================================================
 # РАЗДЕЛ 3. ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ИИ (ПРОМПТ)
 # =====================================================================
-def generate_perfect_math(subject, section, objectives_list, w_type, var_qty, t_count, score):
+def generate_perfect_math(selected_class, subject, section, objectives_list, w_type, var_qty, t_count, score):
     client = Client()
     
     # Формируем список целей в строку
