@@ -1113,7 +1113,6 @@ else:  # СОЧ
 variants = st.sidebar.slider("Количество вариантов:", min_value=1, max_value=4, value=2)
 task_count = st.sidebar.slider("Количество заданий в одном варианте:", min_value=1, max_value=10, value=default_tasks)
 max_score = st.sidebar.number_input("Максимальный балл за всю работу:", min_value=1, max_value=40, value=default_score)
-
 # =====================================================================
 # РАЗДЕЛ 3. ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ИИ (ПРОМПТ)
 # =====================================================================
