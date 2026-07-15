@@ -1043,7 +1043,7 @@ ktp_database = {
 # =====================================================================
 st.sidebar.markdown("### 📋 Шаг 1. Выберите учебный план")
 
-# 1. Расширенный выбор классов с разделением на ЕМН и ОГН
+# 1. Выбор класса и направления
 class_options = [
     "5 класс", 
     "6 класс", 
@@ -1057,17 +1057,17 @@ class_options = [
 ]
 selected_class = st.sidebar.selectbox("1. Выберите класс и направление:", class_options)
 
-# 2. Динамическое определение предметов
+# 2. Динамическое определение предметов в зависимости от класса
 if selected_class in ["5 класс", "6 класс"]:
     subject_options = ["Математика"]
-elif "ЕМН" in selected_class or "ОГН" in selected_class or "10 класс" in selected_class:
+elif "ЕМН" in selected_class or "ОГН" in selected_class:
     subject_options = ["Алгебра и начала анализа", "Геометрия"]
 else:  # 7, 8, 9 классы
     subject_options = ["Алгебра", "Геометрия"]
 
 selected_subject = st.sidebar.selectbox("2. Выберите предмет:", subject_options)
 
-# Безопасное получение списка разделов/четвертей из базы данных
+# Безопасное получение списка разделов КТП из базы данных
 available_sections = []
 if selected_class in ktp_database and selected_subject in ktp_database[selected_class]:
     available_sections = list(ktp_database[selected_class][selected_subject].keys())
@@ -1110,6 +1110,7 @@ else:  # СОЧ
     default_tasks = 6
     default_score = 20
 
+# Регулировка параметров работы без лишних отступов
 variants = st.sidebar.slider("Количество вариантов:", min_value=1, max_value=4, value=2)
 task_count = st.sidebar.slider("Количество заданий в одном варианте:", min_value=1, max_value=10, value=default_tasks)
 max_score = st.sidebar.number_input("Максимальный балл за всю работу:", min_value=1, max_value=40, value=default_score)
