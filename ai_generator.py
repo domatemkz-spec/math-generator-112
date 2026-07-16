@@ -1,55 +1,56 @@
 import streamlit as st
-import openai
 import json
-import re
-import time
+
+# =====================================================================
+# ИМПОРТ GEMINI SDK (устанавливается через requirements.txt)
+# =====================================================================
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    st.warning("⚠️ Библиотека google-generativeai не установлена. Добавьте ее в requirements.txt")
 
 # =====================================================================
 # НАСТРОЙКА API
 # =====================================================================
 
-def get_openai_client():
-    """Получение клиента OpenAI с ключом из session_state или secrets"""
-    api_key = st.secrets.get("OPENAI_API_KEY", None)
-    
-    if not api_key:
-        # Если ключ не найден в secrets, пробуем получить из session_state
-        api_key = st.session_state.get("openai_api_key", None)
+def get_gemini_client():
+    """Получение клиента Gemini из Streamlit Secrets"""
+    api_key = st.secrets.get("GEMINI_API_KEY", None)
     
     if not api_key:
         return None
     
     try:
-        client = openai.OpenAI(api_key=api_key)
-        return client
-    except Exception as e:
+        genai.configure(api_key=api_key)
+        return genai
+    except Exception:
         return None
 
 def has_api_key():
     """Проверка наличия API ключа"""
-    return get_openai_client() is not None
+    return get_gemini_client() is not None
 
-def generate_math_task(
+def generate_math_task_gemini(
     grade: int,
     subject: str,
     topic: str,
     learning_objectives: list,
     task_type: str,
-    difficulty: str = "medium"
+    difficulty: str = "medium",
+    model_name: str = "gemini-2.0-flash"
 ) -> dict:
-    """
-    Генерация математического задания с помощью ИИ
-    """
-    client = get_openai_client()
+    """Генерация математического задания с помощью Gemini"""
+    client = get_gemini_client()
     
     if not client:
         return {
-            "task": "❌ API ключ не настроен. Добавьте ключ в настройках.",
-            "answer": "Пожалуйста, введите OpenAI API ключ в боковой панели",
+            "task": "❌ API ключ не настроен. Добавьте GEMINI_API_KEY в Secrets.",
+            "answer": "Настройте ключ в Streamlit Cloud → Settings → Secrets",
             "error": True
         }
     
-    # Формируем промпт
     objectives_text = "\n".join([f"- {obj}" for obj in learning_objectives])
     
     prompt = f"""
@@ -73,24 +74,32 @@ def generate_math_task(
 {{
     "task": "Условие задачи с формулами в LaTeX",
     "answer": "Подробное пошаговое решение и ответ с формулами в LaTeX",
-    "learning_objective": "Код ЦО, которому соответствует задание (например, 11.4.1.1)",
+    "learning_objective": "Код ЦО, которому соответствует задание",
     "points": "Рекомендуемое количество баллов (1-5)"
 }}
 """
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Ты — эксперт по математике и генератор учебных заданий. Отвечай только в формате JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=1000,
-            response_format={"type": "json_object"}
+        model = client.GenerativeModel(
+            model_name,
+            generation_config={
+                "temperature": 0.7,
+                "max_output_tokens": 1000,
+            }
         )
         
-        result = json.loads(response.choices[0].message.content)
+        response = model.generate_content(prompt)
+        response_text = response.text
+        
+        # Ищем JSON в ответе
+        start = response_text.find('{')
+        end = response_text.rfind('}') + 1
+        if start != -1 and end != -1:
+            json_str = response_text[start:end]
+            result = json.loads(json_str)
+        else:
+            result = json.loads(response_text)
+        
         result["error"] = False
         return result
         
@@ -116,11 +125,10 @@ def generate_multiple_tasks(
     variants_count: int,
     tasks_per_variant: int,
     difficulty: str = "medium",
-    progress_callback=None
+    progress_callback=None,
+    model_name: str = "gemini-2.0-flash"
 ) -> list:
-    """
-    Генерация нескольких вариантов заданий
-    """
+    """Генерация нескольких вариантов заданий через Gemini"""
     all_tasks = []
     total_tasks = variants_count * tasks_per_variant
     completed = 0
@@ -128,18 +136,17 @@ def generate_multiple_tasks(
     for v in range(1, variants_count + 1):
         variant_tasks = []
         
-        # Для каждого задания в варианте
         for t in range(tasks_per_variant):
-            # Выбираем ЦО для этого задания (по кругу)
             objective = learning_objectives[t % len(learning_objectives)]
             
-            task = generate_math_task(
+            task = generate_math_task_gemini(
                 grade=grade,
                 subject=subject,
                 topic=topic,
                 learning_objectives=[objective],
                 task_type=task_type,
-                difficulty=difficulty
+                difficulty=difficulty,
+                model_name=model_name
             )
             variant_tasks.append(task)
             
@@ -155,9 +162,7 @@ def generate_multiple_tasks(
     return all_tasks
 
 def build_variants_html(all_tasks, work_type, max_score):
-    """
-    Построение HTML-кода из сгенерированных заданий
-    """
+    """Построение HTML-кода из сгенерированных заданий"""
     final_html = ""
     
     for variant_data in all_tasks:
@@ -187,7 +192,6 @@ def build_variants_html(all_tasks, work_type, max_score):
             """
             answers_list_html += f"<li><b>Задание №{idx} ({objective}):</b> {ans_text}</li>"
 
-        # Определяем заголовок
         if work_type == "Формативное оценивание (ФО)":
             title = "🎯 ФО"
         elif work_type == "СОР":
@@ -236,24 +240,17 @@ def render_ai_settings():
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🤖 Настройки ИИ")
     
-    # Проверяем наличие ключа
     has_key = has_api_key()
     
-    if not has_key:
-        api_key = st.sidebar.text_input(
-            "🔑 OpenAI API ключ:",
-            type="password",
-            placeholder="sk-...",
-            help="Получить ключ: https://platform.openai.com/api-keys"
-        )
-        if api_key:
-            st.session_state["openai_api_key"] = api_key
-            has_key = True
-    
     if has_key:
-        st.sidebar.success("✅ API ключ активен")
+        st.sidebar.success("✅ Gemini API ключ активен")
     else:
-        st.sidebar.warning("⚠️ Введите API ключ для генерации ИИ")
+        st.sidebar.warning("⚠️ Добавьте GEMINI_API_KEY в Secrets")
+        st.sidebar.info("""
+        В Streamlit Cloud:
+        1. Settings → Secrets
+        2. Добавьте: GEMINI_API_KEY = "ваш_ключ"
+        """)
     
     # Настройки генерации
     st.sidebar.markdown("#### 🎯 Параметры")
@@ -270,8 +267,16 @@ def render_ai_settings():
         }.get(x, x)
     )
     
+    model_name = st.sidebar.selectbox(
+        "Модель Gemini:",
+        ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"],
+        index=0,
+        help="gemini-2.5-pro — для Pro подписки"
+    )
+    
     return {
         "use_ai": use_ai and has_key,
         "difficulty": difficulty,
-        "has_key": has_key
+        "has_key": has_key,
+        "model_name": model_name
     }
