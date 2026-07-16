@@ -1,8 +1,14 @@
-# style_utils.py
 import streamlit as st
 
-def apply_custom_styles():
-    """Применение пользовательских CSS стилей"""
+# =====================================================================
+# ЕДИНЫЙ ИСТОЧНИК СТИЛЕЙ (без дублирования)
+# =====================================================================
+
+def apply_school_style():
+    """
+    Применение единого школьного дизайна для всей платформы.
+    Вызывается ТОЛЬКО в main_hub.py.
+    """
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap');
@@ -308,6 +314,11 @@ def apply_custom_styles():
     </style>
     """, unsafe_allow_html=True)
 
+
+# =====================================================================
+# ВСПОМОГАТЕЛЬНЫЕ UI-КОМПОНЕНТЫ
+# =====================================================================
+
 def render_sidebar_logo():
     """Отрисовка логотипа в сайдбаре"""
     st.sidebar.markdown("""
@@ -317,6 +328,7 @@ def render_sidebar_logo():
         <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.85rem;">СОР / СОЧ / ФО</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 def render_info_cards():
     """Отрисовка информационных карточек"""
@@ -358,6 +370,7 @@ def render_info_cards():
         </div>
         """, unsafe_allow_html=True)
 
+
 def render_footer():
     """Отрисовка футера"""
     st.markdown("""
@@ -372,3 +385,11 @@ def render_footer():
         <span>💡 Для учителей математики</span>
     </div>
     """, unsafe_allow_html=True)
+
+
+# =====================================================================
+# АЛИАСЫ ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ
+# =====================================================================
+
+# Для совместимости со старым именем функции
+apply_custom_styles = apply_school_style
