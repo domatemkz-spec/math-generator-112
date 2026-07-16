@@ -1,28 +1,18 @@
-# main_hub.py
 import streamlit as st
 import importlib
 import sys
 import os
 
-# Добавляем текущую папку в путь для импорта
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 # =====================================================================
-# НАСТРОЙКА СТРАНИЦЫ
+# НАСТРОЙКА СТРАНИЦЫ (УДАЛИЛИ set_page_config, т.к. он уже в app.py)
 # =====================================================================
-st.set_page_config(
-    page_title="📚 ИИ-Генератор СОР/СОЧ по математике",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Инициализация session_state
 if "generated_text" not in st.session_state:
     st.session_state.generated_text = ""
 
 # =====================================================================
-# СТИЛИ (встроенные прямо в main_hub для простоты)
+# СТИЛИ
 # =====================================================================
 st.markdown("""
 <style>
@@ -330,24 +320,27 @@ tr:hover td {
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# ПОДКЛЮЧЕНИЕ MATHJAX
+# ПОДКЛЮЧЕНИЕ MATHJAX (ТОЛЬКО ОДИН РАЗ!)
 # =====================================================================
-st.markdown("""
-<script>
-window.MathJax = {
-    tex: { 
-        inlineMath: [['$', '$']], 
-        displayMath: [['$$', '$$']],
-        processEscapes: true 
-    },
-    svg: {
-        fontCache: 'global'
-    }
-};
-</script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-</script>
-""", unsafe_allow_html=True)
+# Проверяем, что MathJax еще не подключен
+if "mathjax_loaded" not in st.session_state:
+    st.markdown("""
+    <script>
+    window.MathJax = {
+        tex: { 
+            inlineMath: [['$', '$']], 
+            displayMath: [['$$', '$$']],
+            processEscapes: true 
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    """, unsafe_allow_html=True)
+    st.session_state.mathjax_loaded = True
 
 # =====================================================================
 # БОКОВАЯ ПАНЕЛЬ
@@ -369,10 +362,10 @@ CLASSES = {
     "7 класс": "class_7",
     "8 класс": "class_8",
     "9 класс": "class_9",
-    "10 класс (ЕМН)": "class_10_emn",    # Исправлено: ЕМН
-    "10 класс (ОГН)": "class_10_ogn",    # Исправлено: ОГН
-    "11 класс (ЕМН)": "class_11_emn",    # Исправлено: ЕМН
-    "11 класс (ОГН)": "class_11_ogn"     # Исправлено: ОГН
+    "10 класс (ЕМН)": "class_10_emn",
+    "10 класс (ОГН)": "class_10_ogn",
+    "11 класс (ЕМН)": "class_11_emn",
+    "11 класс (ОГН)": "class_11_ogn"
 }
 
 st.sidebar.markdown("### 📖 Выберите класс")
@@ -435,18 +428,22 @@ with col4:
 st.markdown("---")
 
 # =====================================================================
-# ЗАГРУЗКА МОДУЛЯ ДЛЯ ВЫБРАННОГО КЛАССА
+# ЗАГРУЗКА МОДУЛЯ ДЛЯ ВЫБРАННОГО КЛАССА (ИСПРАВЛЕНО)
 # =====================================================================
 module_name = CLASSES[selected_class]
 
 try:
-    # Пробуем импортировать модуль
-    module = __import__(module_name)
+    # ИСПРАВЛЕНО: используем importlib
+    module = importlib.import_module(module_name)
     
     # Проверяем наличие функции render
     if hasattr(module, 'render'):
-        # Вызываем рендер модуля
-        module.render()
+        try:
+            # Вызываем рендер модуля с обработкой ошибок
+            module.render()
+        except Exception as render_error:
+            st.error(f"❌ Ошибка в модуле {module_name}: {str(render_error)}")
+            st.info("Пожалуйста, проверьте код модуля.")
     else:
         st.warning(f"⚠️ Модуль {module_name} не содержит функцию render()")
         
@@ -480,6 +477,8 @@ def render():
     
     # Добавьте здесь логику генерации заданий
 """, language="python")
+except Exception as e:
+    st.error(f"❌ Непредвиденная ошибка при загрузке модуля: {e}")
 
 # =====================================================================
 # ФУТЕР
